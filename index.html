@@ -249,7 +249,7 @@
       <div class="row">
         <div class="field" style="margin-bottom:0">
           <label>URL do Apps Script (Web App)</label>
-          <input id="appsScriptUrl" type="url" placeholder="https://script.google.com/macros/s/AKfycbz4W9tRL6MWNKtkVxfNkuxZ5O4q6ERR-iSgZxO8hIm7EuOnLtcN_J1AaEcNLlwAIab7Og/exec" />
+          <input id="appsScriptUrl" type="url" placeholder="https://script.google.com/macros/s/AKfycbwSLMXCRxUfZltnTnpyn8zAqWHYdFGaI94R37qu_XqAWK_6y3V13OKMH1FpY0sqLyoXzg/exec />
         </div>
         <button class="btn btn-outline btn-sm" onclick="carregarListas()">Carregar listas</button>
       </div>
@@ -304,6 +304,9 @@
 
       <button id="btnPagar" class="btn btn-accent" onclick="executarFluxo()">
         Simular pagamento aprovado
+      </button>
+      <button class="btn btn-outline" style="margin-top:10px" onclick="debugCadastro()">
+        🔍 Debug: testar campo empresa
       </button>
     </div>
 
@@ -473,6 +476,37 @@
       } finally {
         btn.disabled = false;
         btn.textContent = 'Simular pagamento aprovado';
+      }
+    }
+
+    // ── debug: testar variações do campo empresa ──
+
+    async function debugCadastro() {
+      try {
+        const base     = getUrl();
+        const nome     = $('nome').value.trim();
+        const telefone = $('telefone').value.trim().replace(/\D/g, '');
+        if (!nome || !telefone) throw new Error('Preencha nome e telefone.');
+
+        log('━━━ DEBUG CADASTRO — testando variações do campo empresa ━━━', 'log-warn');
+
+        const resp = await fetch(base, {
+          method: 'POST',
+          headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+          body: JSON.stringify({ action: 'debug_cadastro', nome, telefone })
+        }).then(r => r.json());
+
+        if (resp.status === 'success') {
+          log('CAMPO CORRETO: ' + resp.campo_correto, 'log-ok');
+          log('Resultado: ' + JSON.stringify(resp.resultado), 'log-ok');
+        } else {
+          log('Nenhuma variante funcionou. Detalhes:', 'log-err');
+          (resp.tentativas || []).forEach(t => {
+            log(`  Campo "${t.campo}" → ${JSON.stringify(t.resposta)}`, 'log-err');
+          });
+        }
+      } catch (err) {
+        log('ERRO debug: ' + err.message, 'log-err');
       }
     }
   </script>
